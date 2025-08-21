@@ -22,14 +22,13 @@
     selectedSymptoms = selectedSymptoms.map((s) => (s.id === id ? { ...s, severity: value } : s));
   }
 
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher<{ submit: { date: string; rating: number; symptoms: Array<{id:string; severity?: number}>; journal: string } }>();
+
   function submit(event: SubmitEvent) {
     event.preventDefault();
     const payload = { date, rating, symptoms: selectedSymptoms, journal };
-    // Dispatch a Svelte component event so parents can listen with on:submit
-    // Using `dispatchEvent` on the component instance is not correct in Svelte 5.
-    // Instead, we create a DOM CustomEvent and dispatch on the form element.
-    const customEvent = new CustomEvent('submit', { detail: payload, bubbles: true });
-    (event.target as HTMLFormElement).dispatchEvent(customEvent);
+    dispatch('submit', payload);
   }
 </script>
 
@@ -48,10 +47,10 @@
     <legend>Symptoms</legend>
     {#each symptoms as s}
       <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.25rem;">
-        <input id={s.id} type="checkbox" checked={selectedSymptoms.some((x) => x.id === s.id)} on:change={() => toggleSymptom(s.id)} />
+        <input id={s.id} type="checkbox" checked={selectedSymptoms.some((x) => x.id === s.id)} onchange={() => toggleSymptom(s.id)} />
         <label for={s.id} style="min-width:10rem;">{s.name}</label>
         {#if selectedSymptoms.some((x) => x.id === s.id)}
-          <input aria-label={`${s.name} severity`} type="range" min="1" max="5" value={(selectedSymptoms.find((x) => x.id === s.id)?.severity) ?? 3} on:input={(e) => setSeverity(s.id, Number((e.target as HTMLInputElement).value))} />
+          <input aria-label={`${s.name} severity`} type="range" min="1" max="5" value={(selectedSymptoms.find((x) => x.id === s.id)?.severity) ?? 3} oninput={(e) => setSeverity(s.id, Number((e.target as HTMLInputElement).value))} />
         {/if}
       </div>
     {/each}
@@ -59,7 +58,7 @@
 
   <label style="display:block;">
     <div>Journal</div>
-    <textarea rows={5} bind:value={journal} placeholder="Observations..." />
+    <textarea rows={5} bind:value={journal} placeholder="Observations..."></textarea>
   </label>
 
   <button type="submit">Save Entry</button>
